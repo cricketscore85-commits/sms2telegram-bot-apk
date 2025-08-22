@@ -1,29 +1,49 @@
-name: Android APK Build
+name: Build SMS2Telegram APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      TG_BOT_TOKEN: ${{ 8418824285:AAEWIihC_J-zj_hvMwpNXnTRMRqzY_VLNqg }}
+      TG_CHAT_ID: ${{ 6181084194 }}
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # ১. রিপো ক্লোন
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      # ২. জাভা সেটআপ
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Build APK with Gradle
-      run: ./gradlew assembleDebug
+      # ৩. অ্যান্ড্রয়েড SDK সেটআপ
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: app-debug.apk
-        path: app/build/outputs/apk/debug/app-debug.apk
+      # ৪. Gradle cache (speed up build)
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v3
+
+      # ৫. Gradlew executable
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # ৬. Debug APK build
+      - name: Assemble Debug
+        run: ./gradlew assembleDebug
+
+      # ৭. Debug APK upload
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
